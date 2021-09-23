@@ -25,13 +25,14 @@ async def producer_handler(websocket, path):
             # count = count + 1
             # print("Item " + str(count) + ":")
             # print(item)
-            print(json.dumps({'message': message}))
-            await websocket.send(json.dumps({'message': message}))
-            await asyncio.sleep(.1)
+            # print(json.dumps({'message': message}))
             if not message:
                 # Check if client is still alive
                 print("Pinging client")
                 await websocket.ping()
+            else:
+                await websocket.send(json.dumps({'message': message}))
+                await asyncio.sleep(.1)
         except ws.exceptions.ConnectionClosed:
             print("Connection closed")
             await websocket.close()
