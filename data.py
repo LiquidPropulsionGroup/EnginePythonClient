@@ -17,7 +17,6 @@ async def producer_handler(websocket, path):
     count = 0
     last_message = 0
     print("producer start")
-    await asyncio.sleep(0.05)
     while True:
         
         message = await producer(last_message)
@@ -39,7 +38,8 @@ async def producer_handler(websocket, path):
             return
         
         # very important line :)!
-        await asyncio.sleep(2)
+        #await asyncio.sleep(2)
+        await asyncio.sleep(0.05)
 
 # Loop for grabbing information from the Pi-hosted redis stream
 async def producer(last_message):
@@ -85,7 +85,8 @@ async def producer(last_message):
                             'TC_WATER_Out': f"{data[b'TC_WATER_Out'].decode()}",
                             'TC_CHAM': f"{data[b'TC_CHAM'].decode()}",
                             #'RC_LOX_Level': f"{data[b'RC_LOX_Level'].decode()}",
-                            'FT_Thrust': f"{data[b'FT_Thrust'].decode()}"
+                            'FT_Thrust': f"{data[b'FT_Thrust'].decode()}",
+                            'FL_WATER': f"{data[b'FL_WATER'].decode()}"
                             }
         # print(data_buffer)
         data_package.append(data_buffer)
