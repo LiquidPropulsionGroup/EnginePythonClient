@@ -8,7 +8,9 @@ import websockets as ws
 
 # Websockets Server
 async def main():
+    print("Main")
     async with ws.serve(producer_handler, "localhost", 8765):
+        print("ws")
         await asyncio.Future()  # run forever
 
 async def producer_handler(websocket, path):
@@ -19,12 +21,14 @@ async def producer_handler(websocket, path):
     while True:
         
         message = await producer(last_message)
+        last_message = 1
         try:
-            count = count + 1
-            print("Item " + str(count) + ":")
-            print(item)
+            # count = count + 1
+            # print("Item " + str(count) + ":")
+            # print(item)
+            print(json.dumps({'message': message}))
             await websocket.send(json.dumps({'message': message}))
-            # await asyncio.sleep(.1)
+            await asyncio.sleep(.1)
             if not message:
                 # Check if client is still alive
                 print("Pinging client")
@@ -39,7 +43,7 @@ async def producer_handler(websocket, path):
 
 # Loop for grabbing information from the Pi-hosted redis stream
 async def producer(last_message):
-
+    print("=============================")
     global data
     global label
 
@@ -65,15 +69,33 @@ async def producer(last_message):
     data_package = []
     for sensor_reading in data:
         (label, data) = sensor_reading
-        print(sensor_reading)
-        data_buffer = json.dumps({"Timestamp": f"{label.decode()}", "PT_HE": f"{data[b'PT_HE'].decode()}", "PT_Purge": f"{data[b'PT_Purge'].decode()}", "PT_Pneu": f"{data[b'PT_Pneu'].decode()}", "PT_FUEL_PV": f"{data[b'PT_FUEL_PV'].decode()}", "PT_LOX_PV": f"{data[b'PT_LOX_PV'].decode()}", "PT_FUEL_INJ": f"{data[b'PT_FUEL_INJ'].decode()}", "PT_CHAM": f"{data[b'PT_CHAM'].decode()}", "TC_FUEL_PV": f"{data[b'TC_FUEL_PV'].decode()}", "PT_LOX_PV": f"{data[b'TC_LOX_PV'].decode()}", "TC_LOX_Valve_Main": f"{data[b'TC_LOX_Valve_Main'].decode()}", "RC_LOX_Level": f"{data[b'RC_LOX_Level'].decode()}", "FT_Thrust": f"{data[b'FT_Thrust'].decode()}"})
-        #print(data_buffer)
-        data_package = [*data_package, data_buffer]
+        # print(sensor_reading)
+        data_buffer = {'Timestamp': f"{data[b'Timestamp'].decode()}",
+                            'PT_HE': f"{data[b'PT_HE'].decode()}",
+                            'PT_Purge': f"{data[b'PT_Purge'].decode()}",
+                            'PT_Pneu': f"{data[b'PT_Pneu'].decode()}",
+                            'PT_FUEL_PV': f"{data[b'PT_FUEL_PV'].decode()}",
+                            'PT_LOX_PV': f"{data[b'PT_LOX_PV'].decode()}",
+                            #'PT_FUEL_INJ': f"{data[b'PT_FUEL_INJ'].decode()}",
+                            'PT_CHAM': f"{data[b'PT_CHAM'].decode()}",
+                            'TC_FUEL_PV': f"{data[b'TC_FUEL_PV'].decode()}",
+                            'TC_LOX_PV': f"{data[b'TC_LOX_PV'].decode()}",
+                            'TC_LOX_Valve_Main': f"{data[b'TC_LOX_Valve_Main'].decode()}",
+                            'TC_WATER_In': f"{data[b'TC_WATER_In'].decode()}",
+                            'TC_WATER_Out': f"{data[b'TC_WATER_Out'].decode()}",
+                            'TC_CHAM': f"{data[b'TC_CHAM'].decode()}",
+                            #'RC_LOX_Level': f"{data[b'RC_LOX_Level'].decode()}",
+                            'FT_Thrust': f"{data[b'FT_Thrust'].decode()}"
+                            }
+        # print(data_buffer)
+        data_package.append(data_buffer)
         #print(label)
         #print(data)
 
     # Pipe to websocket
     print("Websocketed")
+    print("========================")
+    # print(data_package)
     # await websocket.send('test')
     return data_package
 
@@ -93,4 +115,5 @@ data = ''
 global label
 
 # Run the websocket server
+print("Run server")
 asyncio.run(main())
