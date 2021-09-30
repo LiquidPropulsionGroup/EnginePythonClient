@@ -14,80 +14,103 @@ async def main():
         await asyncio.Future()  # run forever
 
 async def producer_handler(websocket, path):
-    count = 0
-    last_message = 0
-    print("producer start")
+    # Produce sensor data for the websocket
+    # count = 0
+    Loop_starter = 0
+    print("sensor producer start")
     while True:
         
-        message = await producer(last_message)
-        last_message = 1
+        sensor_message = await sensor_producer(Loop_starter)
+        valve_message = await valve_producer(Loop_starter)
+        Loop_starter = 1
         try:
             # count = count + 1
             # print("Item " + str(count) + ":")
             # print(item)
             # print(json.dumps({'message': message}))
-            if not message:
+            if not sensor_message:
                 # Check if client is still alive
                 print("Pinging client")
                 await websocket.ping()
             else:
-                await websocket.send(json.dumps({'message': message}))
+                # Send the message
+                await websocket.send(json.dumps({'message': sensor_message}))
                 await asyncio.sleep(.1)
         except ws.exceptions.ConnectionClosed:
             print("Connection closed")
             await websocket.close()
             return
         
+        try:
+            # count = count + 1
+            # print("Item " + str(count) + ":")
+            # print(item)
+            # print(json.dumps({'message': message}))
+            if not valve_message:
+                # Check if client is still alive
+                print("Pinging client")
+                await websocket.ping()
+            else:
+                # Send the message
+                
+                await websocket.send(json.dumps({'message': valve_message}))
+                print("MESSAGE SENT")
+                await asyncio.sleep(.1)
+        except ws.exceptions.ConnectionClosed:
+            print("Connection closed")
+            await websocket.close()
+            return
+
         # very important line :)!
         #await asyncio.sleep(2)
-        await asyncio.sleep(0.05)
+        # await asyncio.sleep(0.05)
 
-# Loop for grabbing information from the Pi-hosted redis stream
-async def producer(last_message):
+# Loop for grabbing information from the Pi-hosted redis sensor_stream
+async def sensor_producer(Loop_starter):
     print("=============================")
-    global data
-    global label
+    global sensor_data
+    global sensor_label
 
-    if last_message == 0:
+    if Loop_starter == 0:
         # Grab the first item to establish the range for XREAD
-        data = redis.xrange(stream_name, count=1)
-        (label,data) = data[0]
+        sensor_data = redis.xrange(sensor_stream_name, count=1)
+        (sensor_label,sensor_data) = sensor_data[0]
         # Grab all the most recent XREAD data starting from the XRANGE
-        data = redis.xread({ stream_name: f'{label.decode()}' }, block=0)
-        (label,data) = data[0]
+        sensor_data = redis.xread({ sensor_stream_name: f'{sensor_label.decode()}' }, block=0)
+        (sensor_label,sensor_data) = sensor_data[0]
     else:
         # Grab the next set of data, starting after the most recent already read stream item
-        data = redis.xrange(stream_name, min=f'{label.decode()}', count=1)
-        (label,data) = data[0]
-        data = redis.xread({ stream_name: f'{label.decode()}'}, block=1)
+        sensor_data = redis.xrange(sensor_stream_name, min=f'{sensor_label.decode()}', count=1)
+        (sensor_label,sensor_data) = sensor_data[0]
+        sensor_data = redis.xread({ sensor_stream_name: f'{sensor_label.decode()}'}, block=1)
         try:
-            (label,data) = data[0]
+            (sensor_label,sensor_data) = sensor_data[0]
         except IndexError:
             print("Index error")
             return []
 
     # Iterate through the chunk of 'new' data
     data_package = []
-    for sensor_reading in data:
-        (label, data) = sensor_reading
+    for sensor_reading in sensor_data:
+        (sensor_label, sensor_data) = sensor_reading
         # print(sensor_reading)
-        data_buffer = {'Timestamp': f"{data[b'Timestamp'].decode()}",
-                            'PT_HE': f"{data[b'PT_HE'].decode()}",
-                            'PT_Purge': f"{data[b'PT_Purge'].decode()}",
-                            'PT_Pneu': f"{data[b'PT_Pneu'].decode()}",
-                            'PT_FUEL_PV': f"{data[b'PT_FUEL_PV'].decode()}",
-                            'PT_LOX_PV': f"{data[b'PT_LOX_PV'].decode()}",
-                            #'PT_FUEL_INJ': f"{data[b'PT_FUEL_INJ'].decode()}",
-                            'PT_CHAM': f"{data[b'PT_CHAM'].decode()}",
-                            'TC_FUEL_PV': f"{data[b'TC_FUEL_PV'].decode()}",
-                            'TC_LOX_PV': f"{data[b'TC_LOX_PV'].decode()}",
-                            'TC_LOX_Valve_Main': f"{data[b'TC_LOX_Valve_Main'].decode()}",
-                            'TC_WATER_In': f"{data[b'TC_WATER_In'].decode()}",
-                            'TC_WATER_Out': f"{data[b'TC_WATER_Out'].decode()}",
-                            'TC_CHAM': f"{data[b'TC_CHAM'].decode()}",
-                            #'RC_LOX_Level': f"{data[b'RC_LOX_Level'].decode()}",
-                            'FT_Thrust': f"{data[b'FT_Thrust'].decode()}",
-                            'FL_WATER': f"{data[b'FL_WATER'].decode()}"
+        data_buffer = {'Timestamp': f"{sensor_data[b'Timestamp'].decode()}",
+                            'PT_HE': f"{sensor_data[b'PT_HE'].decode()}",
+                            'PT_Purge': f"{sensor_data[b'PT_Purge'].decode()}",
+                            'PT_Pneu': f"{sensor_data[b'PT_Pneu'].decode()}",
+                            'PT_FUEL_PV': f"{sensor_data[b'PT_FUEL_PV'].decode()}",
+                            'PT_LOX_PV': f"{sensor_data[b'PT_LOX_PV'].decode()}",
+                            #'PT_FUEL_INJ': f"{sensor_data[b'PT_FUEL_INJ'].decode()}",
+                            'PT_CHAM': f"{sensor_data[b'PT_CHAM'].decode()}",
+                            'TC_FUEL_PV': f"{sensor_data[b'TC_FUEL_PV'].decode()}",
+                            'TC_LOX_PV': f"{sensor_data[b'TC_LOX_PV'].decode()}",
+                            'TC_LOX_Valve_Main': f"{sensor_data[b'TC_LOX_Valve_Main'].decode()}",
+                            'TC_WATER_In': f"{sensor_data[b'TC_WATER_In'].decode()}",
+                            'TC_WATER_Out': f"{sensor_data[b'TC_WATER_Out'].decode()}",
+                            'TC_CHAM': f"{sensor_data[b'TC_CHAM'].decode()}",
+                            #'RC_LOX_Level': f"{sensor_data[b'RC_LOX_Level'].decode()}",
+                            'FT_Thrust': f"{sensor_data[b'FT_Thrust'].decode()}",
+                            'FL_WATER': f"{sensor_data[b'FL_WATER'].decode()}"
                             }
         # print(data_buffer)
         data_package.append(data_buffer)
@@ -101,6 +124,58 @@ async def producer(last_message):
     # await websocket.send('test')
     return data_package
 
+async def valve_producer(Loop_starter):
+    print("=============================")
+    global valve_data
+    global valve_label
+
+    if Loop_starter == 0:
+        # Grab the first item to establish the range for XREAD
+        valve_data = redis.xrange(valve_stream_name, count=1)
+        (valve_label,valve_data) = valve_data[0]
+        # Grab all the most recent XREAD data starting from the XRANGE
+        valve_data = redis.xread({ valve_stream_name: f'{valve_label.decode()}' }, block=0)
+        # print(valve_data)
+        (valve_label,valve_data) = valve_data[0]
+    else:
+        # Grab the next set of data, starting after the most recent already read stream item
+        valve_data = redis.xrange(valve_stream_name, min=f'{valve_label.decode()}', count=1)
+        (valve_label,valve_data) = valve_data[0]
+        valve_data = redis.xread({ valve_stream_name: f'{valve_label.decode()}'}, block=1)
+        # print(valve_data)
+        try:
+            (valve_label,valve_data) = valve_data[0]
+        except IndexError:
+            print("Index error")
+            return []
+
+    # Iterate through the chunk of 'new' data
+    data_package = []
+    for valve_reading in valve_data:
+        (valve_label, valve_data) = valve_reading
+        # print(valve_reading)
+        data_buffer = {'Timestamp': f"{valve_data[b'Timestamp'].decode()}",
+                            'FUEL_Press': f"{valve_data[b'FUEL_Press'].decode()}",
+                            'LOX_Press': f"{valve_data[b'LOX_Press'].decode()}",
+                            'FUEL_Vent': f"{valve_data[b'FUEL_Vent'].decode()}",
+                            'LOX_Vent': f"{valve_data[b'LOX_Vent'].decode()}",
+                            'MAIN': f"{valve_data[b'MAIN'].decode()}",
+                            'FUEL_Purge': f"{valve_data[b'FUEL_Purge'].decode()}",
+                            'LOX_Purge': f"{valve_data[b'LOX_Purge'].decode()}"
+                            }
+        # print(data_buffer)
+        data_package.append(data_buffer)
+        #print(label)
+        #print(data)
+
+    # Pipe to websocket
+    print("Websocketed")
+    print("========================")
+    print(data_package)
+    # await websocket.send('test')
+    return data_package
+
+
 # Create redis client for fetching data
 # Use the Raspberry Pi IP, should be static
 redis = red.Redis(host='192.168.137.10', port=6379)
@@ -109,12 +184,17 @@ redis = red.Redis(host='192.168.137.10', port=6379)
 Operation = True
 
 # Redis Stream ID
-stream_name = 'sensor_stream'
+sensor_stream_name = 'sensor_stream'
+valve_stream_name = 'valve_stream'
 
 # Global var
-global data
-data = ''
-global label
+global sensor_data
+sensor_data = ''
+global sensor_label
+
+global valve_data
+valve_data = ''
+global valve_label
 
 # Run the websocket server
 print("Run server")
