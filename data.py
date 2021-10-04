@@ -62,7 +62,7 @@ async def producer_handler(websocket, path):
             return
 
         # very important line :)!
-        #await asyncio.sleep(2)
+        # await asyncio.sleep(2)
         # await asyncio.sleep(0.05)
 
 # Loop for grabbing information from the Pi-hosted redis sensor_stream
@@ -70,24 +70,26 @@ async def sensor_producer(Loop_starter):
     print("=============================")
     global sensor_data
     global sensor_label
-
-    if Loop_starter == 0:
-        # Grab the first item to establish the range for XREAD
-        sensor_data = redis.xrange(sensor_stream_name, count=1)
-        (sensor_label,sensor_data) = sensor_data[0]
-        # Grab all the most recent XREAD data starting from the XRANGE
-        sensor_data = redis.xread({ sensor_stream_name: f'{sensor_label.decode()}' }, block=0)
-        (sensor_label,sensor_data) = sensor_data[0]
-    else:
-        # Grab the next set of data, starting after the most recent already read stream item
-        sensor_data = redis.xrange(sensor_stream_name, min=f'{sensor_label.decode()}', count=1)
-        (sensor_label,sensor_data) = sensor_data[0]
-        sensor_data = redis.xread({ sensor_stream_name: f'{sensor_label.decode()}'}, block=1)
-        try:
+    try: 
+        if Loop_starter == 0:
+            # Grab the first item to establish the range for XREAD
+            sensor_data = redis.xrange(sensor_stream_name, count=1)
             (sensor_label,sensor_data) = sensor_data[0]
-        except IndexError:
-            print("Index error")
-            return []
+            # Grab all the most recent XREAD data starting from the XRANGE
+            sensor_data = redis.xread({ sensor_stream_name: f'{sensor_label.decode()}' }, block=0)
+            (sensor_label,sensor_data) = sensor_data[0]
+        else:
+            # Grab the next set of data, starting after the most recent already read stream item
+            sensor_data = redis.xrange(sensor_stream_name, min=f'{sensor_label.decode()}', count=1)
+            (sensor_label,sensor_data) = sensor_data[0]
+            sensor_data = redis.xread({ sensor_stream_name: f'{sensor_label.decode()}'}, block=1)
+            (sensor_label,sensor_data) = sensor_data[0]
+    except IndexError:
+        print("INDEX ERROR")
+        return []
+    except NameError:
+        print("Didn't initally loop")
+        return []
 
     # Iterate through the chunk of 'new' data
     data_package = []
@@ -128,26 +130,28 @@ async def valve_producer(Loop_starter):
     print("=============================")
     global valve_data
     global valve_label
-
-    if Loop_starter == 0:
-        # Grab the first item to establish the range for XREAD
-        valve_data = redis.xrange(valve_stream_name, count=1)
-        (valve_label,valve_data) = valve_data[0]
-        # Grab all the most recent XREAD data starting from the XRANGE
-        valve_data = redis.xread({ valve_stream_name: f'{valve_label.decode()}' }, block=0)
-        # print(valve_data)
-        (valve_label,valve_data) = valve_data[0]
-    else:
-        # Grab the next set of data, starting after the most recent already read stream item
-        valve_data = redis.xrange(valve_stream_name, min=f'{valve_label.decode()}', count=1)
-        (valve_label,valve_data) = valve_data[0]
-        valve_data = redis.xread({ valve_stream_name: f'{valve_label.decode()}'}, block=1)
-        # print(valve_data)
-        try:
+    try:
+        if Loop_starter == 0:
+            # Grab the first item to establish the range for XREAD
+            valve_data = redis.xrange(valve_stream_name, count=1)
             (valve_label,valve_data) = valve_data[0]
-        except IndexError:
-            print("Index error")
-            return []
+            # Grab all the most recent XREAD data starting from the XRANGE
+            valve_data = redis.xread({ valve_stream_name: f'{valve_label.decode()}' }, block=0)
+            # print(valve_data)
+            (valve_label,valve_data) = valve_data[0]
+        else:
+            # Grab the next set of data, starting after the most recent already read stream item
+            valve_data = redis.xrange(valve_stream_name, min=f'{valve_label.decode()}', count=1)
+            (valve_label,valve_data) = valve_data[0]
+            valve_data = redis.xread({ valve_stream_name: f'{valve_label.decode()}'}, block=1)
+            (valve_label, valve_data) = valve_data[0]
+            print(valve_data)
+    except IndexError:
+        print("Index error")
+        return []
+    except NameError:
+        print("Didn't initally loop")
+        return []
 
     # Iterate through the chunk of 'new' data
     data_package = []
