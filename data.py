@@ -5,13 +5,28 @@ import json, sys
 # Websocket
 import asyncio
 import websockets as ws
+import re
+import logging
+
+# logger = logging.getLogger('websockets')
+# logger.setLevel(logging.DEBUG)
+# logger.addHandler(logging.StreamHandler())
+# logging.basicConfig(filename="G:\CSUS\LPG\debug\log.txt")
+
 
 # Websockets Server
 async def main():
     print("Main")
     async with ws.serve(producer_handler, "localhost", 8765):
         print("ws")
-        await asyncio.Future()  # run forever
+        try:
+            await asyncio.Future()  # run forever
+        except ws.exceptions.ConnectionClosed:
+            pass
+        except asyncio.exceptions.CancelledError:
+            pass
+        # except KeyboardInterrupt:
+        #     pass
 
 async def producer_handler(websocket, path):
     # Produce sensor data for the websocket
@@ -19,10 +34,17 @@ async def producer_handler(websocket, path):
     Loop_starter = 0
     print("sensor producer start")
     while True:
-        
-        sensor_message = await sensor_producer(Loop_starter)
-        valve_message = await valve_producer(Loop_starter)
-        Loop_starter = 1
+        try:
+            sensor_message = await sensor_producer(Loop_starter)
+            valve_message = await valve_producer(Loop_starter)
+            Loop_starter = 1
+        except ws.exceptions.ConnectionClosed:
+            pass
+        except asyncio.exceptions.CancelledError:
+            pass
+        # except KeyboardInterrupt:
+        #     pass
+
         try:
             # count = count + 1
             # print("Item " + str(count) + ":")
@@ -30,7 +52,7 @@ async def producer_handler(websocket, path):
             # print(json.dumps({'message': message}))
             if not sensor_message:
                 # Check if client is still alive
-                print("Pinging client")
+                # print("Pinging client")
                 await websocket.ping()
             else:
                 # Send the message
@@ -48,7 +70,7 @@ async def producer_handler(websocket, path):
             # print(json.dumps({'message': message}))
             if not valve_message:
                 # Check if client is still alive
-                print("Pinging client")
+                # print("Pinging client")
                 await websocket.ping()
             else:
                 # Send the message
@@ -67,7 +89,7 @@ async def producer_handler(websocket, path):
 
 # Loop for grabbing information from the Pi-hosted redis sensor_stream
 async def sensor_producer(Loop_starter):
-    print("=============================")
+    # print("=============================")
     global sensor_data
     global sensor_label
     try: 
@@ -85,18 +107,23 @@ async def sensor_producer(Loop_starter):
             sensor_data = redis.xread({ sensor_stream_name: f'{sensor_label.decode()}'}, block=1)
             (sensor_label,sensor_data) = sensor_data[0]
     except IndexError:
-        print("INDEX ERROR")
+        # print("INDEX ERROR")
         return []
     except NameError:
         print("Didn't initally loop")
         return []
+    except ws.exceptions.ConnectionClosed:
+        pass
+    except asyncio.exceptions.CancelledError:
+        pass
 
     # Iterate through the chunk of 'new' data
     data_package = []
     for sensor_reading in sensor_data:
         (sensor_label, sensor_data) = sensor_reading
+        sensor_timestamp = re.split("-", sensor_label.decode())
         # print(sensor_reading)
-        data_buffer = {'Timestamp': f"{sensor_data[b'Timestamp'].decode()}",
+        data_buffer = {'Timestamp': f"{sensor_timestamp[0]}",
                             'PT_HE': f"{sensor_data[b'PT_HE'].decode()}",
                             'PT_Purge': f"{sensor_data[b'PT_Purge'].decode()}",
                             'PT_Pneu': f"{sensor_data[b'PT_Pneu'].decode()}",
@@ -120,14 +147,14 @@ async def sensor_producer(Loop_starter):
         #print(data)
 
     # Pipe to websocket
-    print("Websocketed")
+    print("Websocketed Sensor Data")
     print("========================")
     # print(data_package)
     # await websocket.send('test')
     return data_package
 
 async def valve_producer(Loop_starter):
-    print("=============================")
+    # print("=============================")
     global valve_data
     global valve_label
     try:
@@ -145,20 +172,24 @@ async def valve_producer(Loop_starter):
             (valve_label,valve_data) = valve_data[0]
             valve_data = redis.xread({ valve_stream_name: f'{valve_label.decode()}'}, block=1)
             (valve_label, valve_data) = valve_data[0]
-            print(valve_data)
+            
     except IndexError:
-        print("Index error")
+        # print("Index error")
         return []
     except NameError:
         print("Didn't initally loop")
         return []
+    except ws.exceptions.ConnectionClosed:
+        pass
+    except asyncio.exceptions.CancelledError:
+        pass
 
     # Iterate through the chunk of 'new' data
     data_package = []
     for valve_reading in valve_data:
         (valve_label, valve_data) = valve_reading
-        # print(valve_reading)
-        data_buffer = {'Timestamp': f"{valve_data[b'Timestamp'].decode()}",
+        valve_timestamp = re.split("-", valve_label.decode())
+        data_buffer = {'Timestamp': f"{valve_timestamp[0]}",
                             'FUEL_Press': f"{valve_data[b'FUEL_Press'].decode()}",
                             'LOX_Press': f"{valve_data[b'LOX_Press'].decode()}",
                             'FUEL_Vent': f"{valve_data[b'FUEL_Vent'].decode()}",
@@ -173,7 +204,7 @@ async def valve_producer(Loop_starter):
         #print(data)
 
     # Pipe to websocket
-    print("Websocketed")
+    print("Websocketed Valve Update")
     print("========================")
     print(data_package)
     # await websocket.send('test')
