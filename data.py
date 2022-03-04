@@ -27,26 +27,28 @@ async def main():
             pass
         except asyncio.exceptions.CancelledError:
             pass
-        # except KeyboardInterrupt:
-        #     pass
 
 async def producer_handler(websocket, path):
     # Produce sensor data for the websocket
-    # count = 0
+    # Need to start from the beginning for each websocket client
     Loop_starter = 0
     print("sensor producer start")
     while True:
+        # Package sensor and valve data
         try:
+            # From the sensor producer
             sensor_message = await sensor_producer(Loop_starter)
+            # And the valve producer
             valve_message = await valve_producer(Loop_starter)
+            # After the initial loop, change the condition
             Loop_starter = 1
         except ws.exceptions.ConnectionClosed:
             pass
         except asyncio.exceptions.CancelledError:
             pass
-        # except KeyboardInterrupt:
-        #     pass
 
+        # Then send it through websocket to client
+        # Sensor:
         try:
             # count = count + 1
             # print("Item " + str(count) + ":")
@@ -57,14 +59,16 @@ async def producer_handler(websocket, path):
                 # print("Pinging client")
                 await websocket.ping()
             else:
-                # Send the message
+                # Send the messages
                 await websocket.send(json.dumps({'message': sensor_message}))
+                # Don't overload the websocket
                 await asyncio.sleep(.1)
         except ws.exceptions.ConnectionClosed:
             print("Connection closed")
             await websocket.close()
             return
         
+        # Valve:z
         try:
             # count = count + 1
             # print("Item " + str(count) + ":")
@@ -75,8 +79,7 @@ async def producer_handler(websocket, path):
                 # print("Pinging client")
                 await websocket.ping()
             else:
-                # Send the message
-                
+                # Send the messages   
                 await websocket.send(json.dumps({'message': valve_message}))
                 print("MESSAGE SENT")
                 await asyncio.sleep(.1)
@@ -85,15 +88,14 @@ async def producer_handler(websocket, path):
             await websocket.close()
             return
 
-        # very important line :)!
-        # await asyncio.sleep(2)
-        # await asyncio.sleep(0.05)
-
 # Loop for grabbing information from the Pi-hosted redis sensor_stream
 async def sensor_producer(Loop_starter):
     # print("=============================")
     global sensor_data
     global sensor_label
+
+    # When starting the loop, reach all the way back to the start of the stream and package that data
+    
     try: 
         if Loop_starter == 0:
             # Grab the first item to establish the range for XREAD
