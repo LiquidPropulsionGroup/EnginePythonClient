@@ -95,7 +95,7 @@ async def sensor_producer(Loop_starter):
     global sensor_label
 
     # When starting the loop, reach all the way back to the start of the stream and package that data
-    
+
     try: 
         if Loop_starter == 0:
             # Grab the first item to establish the range for XREAD
@@ -144,8 +144,7 @@ async def sensor_producer(Loop_starter):
                             'TC_WATER_Out': f"{sensor_data[b'TC_WATER_Out'].decode()}",
                             'TC_CHAM': f"{sensor_data[b'TC_CHAM'].decode()}",
                             #'RC_LOX_Level': f"{sensor_data[b'RC_LOX_Level'].decode()}",
-                            'FT_Thrust': f"{sensor_data[b'FT_Thrust'].decode()}",
-                            'FL_WATER': f"{sensor_data[b'FL_WATER'].decode()}"
+                            'FT_Thrust': f"{sensor_data[b'FT_Thrust'].decode()}"
                             }
         # print(data_buffer)
         data_package.append(data_buffer)
