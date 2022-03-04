@@ -2,10 +2,12 @@
 from flask import Flask, abort
 import redis as red
 import json, sys
+import itertools
 # Websocket
 import asyncio
 import websockets as ws
 import re
+# For Debugging
 import logging
 
 # logger = logging.getLogger('websockets')
@@ -119,7 +121,9 @@ async def sensor_producer(Loop_starter):
 
     # Iterate through the chunk of 'new' data
     data_package = []
-    for sensor_reading in sensor_data:
+    # Grab only every nth element for packaging
+    n = 10
+    for sensor_reading in itertools.islice(sensor_data,None,None,n):
         (sensor_label, sensor_data) = sensor_reading
         sensor_timestamp = re.split("-", sensor_label.decode())
         # print(sensor_reading)
