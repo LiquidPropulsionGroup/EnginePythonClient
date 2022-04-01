@@ -2,7 +2,6 @@
 from flask import Flask, abort
 # Data Retrieval
 import redis as red
-from importlib.metadata import version
 
 # Flask app settings
 app = Flask(__name__)
@@ -17,7 +16,7 @@ redisClient = red.Redis(host='redis-db', port=6379)
 def StopReplicate():
     # Stop duplicating the host
     # This remains the case until either database goes down, and is the default state
-    redisClient.replicaof('NO ONE')
+    redisClient.replicaof('NO', 'ONE')
 
 def Replicate():
     # Duplicate the host onto the client

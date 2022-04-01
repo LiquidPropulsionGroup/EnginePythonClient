@@ -10,18 +10,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - SSL_DISABLE=True
-    networks:
-      customnetwork:
-        ipv4_address: 172.20.0.10
         
   redis:
     container_name: redis-db
     image: redis
     ports:
       - 6379:6379
-
-networks:
-  customnetwork:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/24
