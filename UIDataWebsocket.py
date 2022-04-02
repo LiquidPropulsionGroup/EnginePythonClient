@@ -131,11 +131,11 @@ async def sensor_producer(Loop_starter):
         # print(sensor_reading)
         data_buffer = {'Timestamp': f"{sensor_timestamp[0]}",
                             'PT_HE': f"{sensor_data[b'PT_HE'].decode()}",
-                            'PT_Purge': f"{sensor_data[b'PT_Purge'].decode()}",
+                            # 'PT_Purge': f"{sensor_data[b'PT_Purge'].decode()}",
                             'PT_Pneu': f"{sensor_data[b'PT_Pneu'].decode()}",
                             'PT_FUEL_PV': f"{sensor_data[b'PT_FUEL_PV'].decode()}",
                             'PT_LOX_PV': f"{sensor_data[b'PT_LOX_PV'].decode()}",
-                            #'PT_FUEL_INJ': f"{sensor_data[b'PT_FUEL_INJ'].decode()}",
+                            'PT_FUEL_INJ': f"{sensor_data[b'PT_FUEL_INJ'].decode()}",
                             'PT_CHAM': f"{sensor_data[b'PT_CHAM'].decode()}",
                             'TC_FUEL_PV': f"{sensor_data[b'TC_FUEL_PV'].decode()}",
                             'TC_LOX_PV': f"{sensor_data[b'TC_LOX_PV'].decode()}",
