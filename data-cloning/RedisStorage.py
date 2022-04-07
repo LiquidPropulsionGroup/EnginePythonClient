@@ -93,25 +93,31 @@ def Write():
 
 def WriteSensorData(newFolderName):
     # Dump sensor_stream into the directory
-    sensor_data = redisClient.xrange(sensor_stream, count=1)
-    (sensor_label, sensor_data) = sensor_data[0]
+    sensor_data_first = redisClient.xrange(sensor_stream, count=1)
+    (sensor_label_first, sensor_data_first) = sensor_data_first[0]
     print('Found data')
-    sensor_data = redisClient.xread({ sensor_stream: f'{sensor_label.decode()}' }, block = 0)
+    sensor_data = redisClient.xread({ sensor_stream: f'{sensor_label_first.decode()}' }, block = 0)
     (sensor_label, sensor_data) = sensor_data[0]
     print('Data collated')
-
-    # We miss a row here but it really doesn't matter
 
     # Writing to disk
     with open(data_dir + newFolderName + '/sensor_data.csv', mode='w') as sensor_file:
         # Establish the csv writing method
         sensor_writer = csv.DictWriter(sensor_file, fieldnames=sensor_fields)
         sensor_writer.writeheader()
+
+        # Write the first row so it doesn't get missed
+        [sensor_timestamp_item, multiInsertID] = re.split("-", sensor_label_first.decode())
+        sensor_data_item = { key.decode(): val.decode() for key, val in sensor_data_first.items() }
+        sensor_timestamp_item = { "Timestamp": sensor_timestamp_item }
+        sensor_data_row = { **sensor_timestamp_item, **sensor_data_item }
+        sensor_writer.writerow(sensor_data_row)
+
         for sensor_reading in sensor_data:
             # Separate data and timestamp
             (sensor_label_item, sensor_data_item) = sensor_reading
-            print(sensor_label_item)
-            print(sensor_data_item)
+            # print(sensor_label_item)
+            # print(sensor_data_item)
             # Split the timestamp
             [sensor_timestamp_item, multiInsertID] = re.split("-", sensor_label_item.decode())
             sensor_timestamp_item = { "Timestamp": sensor_timestamp_item }
@@ -121,18 +127,19 @@ def WriteSensorData(newFolderName):
             sensor_data_row = { **sensor_timestamp_item, **sensor_data_item }
             # Write the data to the .csv
             sensor_writer.writerow(sensor_data_row)
+        print('SENSOR DATA SAVED')
 
 def WriteEventData(newFolderName):
     # Dump sensor_stream into the directory
     event_data_first = redisClient.xrange(event_stream, count=1)
     (event_label_first, event_data_first) = event_data_first[0]
-    print(event_label_first)
-    print(event_data_first)
+    # print(event_label_first)
+    # print(event_data_first)
     print('Found data')
     event_data = redisClient.xread({ event_stream: f'{event_label_first.decode()}' }, block=0)
     (event_label, event_data) = event_data[0]
-    print(event_label)
-    print(event_data)
+    # print(event_label)
+    # print(event_data)
     print('Data collated')
 
     # Writing to disk
@@ -146,29 +153,30 @@ def WriteEventData(newFolderName):
         event_data_item = { key.decode(): val.decode() for key, val in event_data_first.items() }
         event_timestamp_item = { "Timestamp": event_timestamp_item }
         event_data_row = { **event_timestamp_item, **event_data_item }
-        print("=====================")
-        print(event_data_row)
+        # print("=====================")
+        # print(event_data_row)
         event_writer.writerow(event_data_row)
 
         # Step through the rest of the data
         for event_reading in event_data:
             # Separate data and timestamp
-            print(event_reading)
+            # print(event_reading)
             (event_label_item, event_data_item) = event_reading
-            print(event_label_item)
-            print(event_data_item)
+            # print(event_label_item)
+            # print(event_data_item)
             # Split the timestamp
             [event_timestamp_item, multiInsertID] = re.split("-", event_label_item.decode())
             event_timestamp_item = { "Timestamp": event_timestamp_item }
-            print(event_timestamp_item)
+            # print(event_timestamp_item)
             # Data is in a json/dict but is byte encoded, so strip it
             event_data_item = { key.decode(): val.decode() for key, val in event_data_item.items() }
-            print(event_data_item)
+            # print(event_data_item)
             # Merge Timestamp and the data into one dict
             event_data_row = { **event_timestamp_item, **event_data_item }
-            print(event_data_row)
+            # print(event_data_row)
             # Write the data to the .csv
             event_writer.writerow(event_data_row)
+        print('EVENT DATA SAVED')
 
 @app.route('/serial/storage/<action>')
 def ReplicationControl(action):
