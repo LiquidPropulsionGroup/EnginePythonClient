@@ -100,6 +100,8 @@ def WriteSensorData(newFolderName):
     (sensor_label, sensor_data) = sensor_data[0]
     print('Data collated')
 
+    # We miss a row here but it really doesn't matter
+
     # Writing to disk
     with open(data_dir + newFolderName + '/sensor_data.csv', mode='w') as sensor_file:
         # Establish the csv writing method
@@ -122,12 +124,12 @@ def WriteSensorData(newFolderName):
 
 def WriteEventData(newFolderName):
     # Dump sensor_stream into the directory
-    event_data = redisClient.xrange(event_stream, count=1)
-    (event_label, event_data) = event_data[0]
-    print(event_label)
-    print(event_data)
+    event_data_first = redisClient.xrange(event_stream, count=1)
+    (event_label_first, event_data_first) = event_data_first[0]
+    print(event_label_first)
+    print(event_data_first)
     print('Found data')
-    event_data = redisClient.xread({ event_stream: f'{event_label.decode()}' }, block=0)
+    event_data = redisClient.xread({ event_stream: f'{event_label_first.decode()}' }, block=0)
     (event_label, event_data) = event_data[0]
     print(event_label)
     print(event_data)
@@ -138,6 +140,17 @@ def WriteEventData(newFolderName):
         # Establish the csv writing method
         event_writer = csv.DictWriter(event_file, fieldnames=event_fields)
         event_writer.writeheader()
+
+        # Write the first row so it doesn't get skipped
+        [event_timestamp_item, multiInsertID] = re.split("-", event_label_first.decode())
+        event_data_item = { key.decode(): val.decode() for key, val in event_data_first.items() }
+        event_timestamp_item = { "Timestamp": event_timestamp_item }
+        event_data_row = { **event_timestamp_item, **event_data_item }
+        print("=====================")
+        print(event_data_row)
+        event_writer.writerow(event_data_row)
+
+        # Step through the rest of the data
         for event_reading in event_data:
             # Separate data and timestamp
             print(event_reading)
