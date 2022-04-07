@@ -3,13 +3,15 @@ services:
   data-cloning-service:
     container_name: data-cloning
     build:
-      context: ./data-cloning
+      context: ./data-cloning 
       dockerfile: ./dockerfile
     ports:
       - 3004:3004
     environment:
       - PYTHONUNBUFFERED=1
       - SSL_DISABLE=True
+    volumes:
+    - ./Data_files:/data/Runs
         
   redis:
     container_name: redis-db
