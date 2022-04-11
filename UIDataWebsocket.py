@@ -124,7 +124,7 @@ async def sensor_producer(Loop_starter):
     # Iterate through the chunk of 'new' data
     data_package = []
     # Grab only every nth element for packaging
-    n = 10
+    n = 1
     for sensor_reading in itertools.islice(sensor_data,None,None,n):
         (sensor_label, sensor_data) = sensor_reading
         sensor_timestamp = re.split("-", sensor_label.decode())
