@@ -16,6 +16,8 @@ import logging
 # logger.addHandler(logging.StreamHandler())
 # logging.basicConfig(filename="G:\CSUS\LPG\debug\log.txt")
 
+#test
+
 
 # Websockets Server
 async def main():
