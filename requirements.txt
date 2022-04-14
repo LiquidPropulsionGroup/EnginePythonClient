@@ -1,6 +1,5 @@
 flask
 redis
-itertools
 asyncio
 websockets
 re
