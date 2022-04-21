@@ -18,6 +18,7 @@ import logging
 
 #test
 
+app = Flask(__name__)
 
 # Websockets Server
 async def main():
@@ -272,3 +273,6 @@ global valve_label
 # Run the websocket server
 print("Run server")
 asyncio.run(main())
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3003)   

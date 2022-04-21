@@ -12,7 +12,18 @@ services:
       - SSL_DISABLE=True
     volumes:
     - ./Data_files:/data/Runs
-        
+
+  data-socket-service:
+    container_name: data-socket
+    build:
+      context: ./data-socket
+      dockerfile: ./dockerfile
+    ports:
+      - 3003:3003
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SSL_DISABLE=True
+
   redis:
     container_name: redis-db
     image: redis
