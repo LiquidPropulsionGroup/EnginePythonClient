@@ -18,12 +18,12 @@ import logging
 
 #test
 
-app = Flask(__name__)
+
 
 # Websockets Server
 async def main():
     print("Main")
-    async with ws.serve(producer_handler, port=3003, host="0.0.0.0"):
+    async with ws.serve(producer_handler, port=3003):
         print("ws")
         try:
             print("Trying to run forever")
@@ -273,6 +273,4 @@ global valve_label
 # Run the websocket server
 print("Run server")
 asyncio.run(main())
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3003)   
+  
