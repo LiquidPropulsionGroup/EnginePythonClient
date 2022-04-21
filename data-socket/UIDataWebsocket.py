@@ -23,7 +23,7 @@ app = Flask(__name__)
 # Websockets Server
 async def main():
     print("Main")
-    async with ws.serve(producer_handler, port=8765):
+    async with ws.serve(producer_handler, port=3003):
         print("ws")
         try:
             print("Trying to run forever")
