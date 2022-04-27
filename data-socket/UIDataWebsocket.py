@@ -252,7 +252,7 @@ async def valve_producer(Loop_starter):
 
 # Create redis client for fetching data
 # Use the Raspberry Pi IP, should be static
-redis = red.Redis(host='localhost', port=6379)
+redis = red.Redis(host='redis-db', port=6379)
 
 # While loop control variable
 Operation = True
