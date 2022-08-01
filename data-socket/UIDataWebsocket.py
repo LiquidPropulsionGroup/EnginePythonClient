@@ -117,9 +117,6 @@ async def producer_handler(websocket, path):
             baseTime = time.time()
 
 
-
-
-
 # Loop for grabbing information from the Pi-hosted redis sensor_stream
 async def sensor_producer(Loop_starter):
     # print("=============================")
