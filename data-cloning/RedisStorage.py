@@ -38,7 +38,8 @@ event_fields = [
     "LOX_Vent",
     "MAIN",
     "FUEL_Purge",
-    "LOX_Purge"
+    "LOX_Purge",
+    "Water_Flow"
 ]
 data_dir = '/data/Runs/'
 
