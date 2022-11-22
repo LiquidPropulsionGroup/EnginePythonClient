@@ -45,9 +45,12 @@ async def producer_handler(websocket, path):
     while True:
         # Package sensor and valve data
         # print("Looping...")
+        # Debug limiter on loop speed:
+        # await asyncio.sleep(.1)
         try:
             # From the sensor producer
             sensor_message = await sensor_producer(Loop_starter)
+            # print(sensor_message)
             # And the valve producer
             # valve_message = await valve_producer(Loop_starter)
             # After the initial loop, change the condition
@@ -72,8 +75,9 @@ async def producer_handler(websocket, path):
                 await websocket.ping()
             else:
                 # Send the messages
+                # print(sensor_message)
                 await websocket.send(json.dumps({'message': sensor_message}))
-                # Don't overload the websocket
+                # Don't overload the websocket (race condition?)
                 await asyncio.sleep(.1)
                 # Confirm reception of the data frame
                 response = await websocket.recv()
@@ -127,6 +131,7 @@ async def sensor_producer(Loop_starter):
 
     try: 
         if Loop_starter == 0:
+            print("initial loop")
             # Grab the first item to establish the range for XREAD
             sensor_data = redis.xrange(sensor_stream_name, count=1)
             (sensor_label,sensor_data) = sensor_data[0]
@@ -140,10 +145,11 @@ async def sensor_producer(Loop_starter):
             sensor_data = redis.xread({ sensor_stream_name: f'{sensor_label.decode()}'}, block=1)
             (sensor_label,sensor_data) = sensor_data[0]
     except IndexError:
+        # There is no new data to push
         # print("INDEX ERROR")
         return []
     except NameError:
-        # print("Didn't initally loop")
+        print("Didn't initally loop")
         return []
     except ws.exceptions.ConnectionClosed:
         print("Connection Closed")

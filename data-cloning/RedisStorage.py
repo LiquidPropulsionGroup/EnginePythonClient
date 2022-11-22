@@ -1,6 +1,7 @@
 # HTTP Server host
 import threading
 from flask import Flask, abort
+from flask_cors import CORS
 # Data Retrieval
 import redis
 import json, sys, sqlite3
@@ -45,6 +46,7 @@ data_dir = '/data/Runs/'
 
 # Flask app settings
 app = Flask(__name__)
+CORS(app)
 
 # Host redis process location, contains data to collect
 # Use the Raspberry Pi IP, should be static
@@ -179,17 +181,23 @@ def WriteEventData(newFolderName):
             event_writer.writerow(event_data_row)
         print('EVENT DATA SAVED')
 
+STORAGE_STATUS = False
+
 @app.route('/serial/storage/<action>')
 def ReplicationControl(action):
+    global STORAGE_STATUS
+
     if action == 'START':
         print('REDIS REPLICATION START')
         Replicate()
+        STORAGE_STATUS = True
         # Stop the storage loop
         return('REDIS REPLICATION STARTED')
 
     if action == 'CLOSE':
         print('REDIS REPLICATION STOP')
         StopReplicate()
+        STORAGE_STATUS = False
         # Start the infinite loop of pulling and storing data
         return('REDIS REPLICATION STOPPED')
 
@@ -197,6 +205,10 @@ def ReplicationControl(action):
         print('PERSISTING REDIS-DB TO DISK')
         fileName = Write()
         return('REDIS PERSISTED TO ' + fileName)
+
+    if action == 'STATUS':
+        print('STATUS UPDATE REQUESTED')
+        return str(STORAGE_STATUS)
 
     return(404)
     
