@@ -169,14 +169,14 @@ async def sensor_producer(Loop_starter):
         data_buffer = {'Timestamp': f"{sensor_timestamp[0]}",
                             'PT_HE': f"{sensor_data[b'PT_HE'].decode()}",
                             # 'PT_Purge': f"{sensor_data[b'PT_Purge'].decode()}",
-                            'PT_Pneu': f"{sensor_data[b'PT_Pneu'].decode()}",
+                            # 'PT_Pneu': f"{sensor_data[b'PT_Pneu'].decode()}",
                             'PT_FUEL_PV': f"{sensor_data[b'PT_FUEL_PV'].decode()}",
                             'PT_LOX_PV': f"{sensor_data[b'PT_LOX_PV'].decode()}",
                             'PT_FUEL_INJ': f"{sensor_data[b'PT_FUEL_INJ'].decode()}",
                             'PT_CHAM': f"{sensor_data[b'PT_CHAM'].decode()}",
                             'TC_FUEL_PV': f"{sensor_data[b'TC_FUEL_PV'].decode()}",
                             'TC_LOX_PV': f"{sensor_data[b'TC_LOX_PV'].decode()}",
-                            'TC_LOX_Valve_Main': f"{sensor_data[b'TC_LOX_Valve_Main'].decode()}",
+                            # 'TC_LOX_Valve_Main': f"{sensor_data[b'TC_LOX_Valve_Main'].decode()}",
                             'TC_WATER_In': f"{sensor_data[b'TC_WATER_In'].decode()}",
                             'TC_WATER_Out': f"{sensor_data[b'TC_WATER_Out'].decode()}",
                             'TC_CHAM': f"{sensor_data[b'TC_CHAM'].decode()}",
@@ -238,7 +238,9 @@ async def valve_producer(Loop_starter):
                             'LOX_Vent': f"{valve_data[b'LOX_Vent'].decode()}",
                             'MAIN': f"{valve_data[b'MAIN'].decode()}",
                             'FUEL_Purge': f"{valve_data[b'FUEL_Purge'].decode()}",
-                            'LOX_Purge': f"{valve_data[b'LOX_Purge'].decode()}"
+                            'LOX_Purge': f"{valve_data[b'LOX_Purge'].decode()}",
+                            'IGNITE': f"{valve_data[b'IGNITE'].decode()}",
+                            'WATER_Flow': f"{valve_data[b'WATER_Flow'].decode()}"
                             }
         # print(data_buffer)
         data_package.append(data_buffer)
