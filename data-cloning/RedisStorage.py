@@ -14,7 +14,7 @@ sensor_stream = 'sensor_stream'
 sensor_fields = [
     "Timestamp",
     "PT_HE",
-    "PT_Pneu",
+    "PT_LOX_2",
     "PT_Purge",
     "PT_FUEL_PV",
     "PT_LOX_PV",
